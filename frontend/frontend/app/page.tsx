@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from './lib/api';
 
 export default function Home() {
@@ -9,6 +9,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token); // Convert to boolean
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +35,28 @@ export default function Home() {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shortUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async () => {
+    try {
+      // Modern approach (requires HTTPS)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shortUrl);
+      } else {
+        // Fallback for HTTP or older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = shortUrl;
+        textArea.style.position = 'fixed';  // Avoid scrolling to bottom
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   return (
@@ -100,11 +124,19 @@ export default function Home() {
           </div>
         )}
         
-        <div className="text-center pt-4">
-           <p className="text-sm text-gray-500">
-             Want to track your links? <a href="/login" className="text-indigo-600 hover:underline">Login</a> or <a href="/register" className="text-indigo-600 hover:underline">Sign up</a>
-           </p>
-        </div>
+        {isLoggedIn ? (
+          <div className="text-center pt-4">
+            <p className="text-sm text-gray-500">
+              Go to <a href="/dashboard" className="text-indigo-600 hover:underline">Dashboard</a>
+            </p>
+            </div>
+        ) : (
+          <div className="text-center pt-4">
+            <p className="text-sm text-gray-500">
+              Want to track your links? <a href="/login" className="text-indigo-600 hover:underline">Login</a> or <a href="/register" className="text-indigo-600 hover:underline">Sign up</a>
+            </p>
+          </div>
+        )}
       </div>
     </main>
   );

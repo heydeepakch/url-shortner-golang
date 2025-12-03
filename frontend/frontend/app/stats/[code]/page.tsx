@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import api from '@/app/lib/api'; // Adjust path if necessary based on your folder structure
+import api from '@/app/lib/api'; 
 
 export default function StatsPage() {
   const { code } = useParams();
